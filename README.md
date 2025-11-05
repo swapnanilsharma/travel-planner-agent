@@ -1,8 +1,3 @@
-Here’s the complete README.md file content (you can copy-paste it directly):
-
-⸻
-
-
 # 🧭 Travel Planner Agent (LangGraph + FastAPI)
 
 This project implements a **multi-agent travel itinerary planner** using **LangGraph** for agent orchestration and **FastAPI** for API serving.
