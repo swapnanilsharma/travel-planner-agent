@@ -1,24 +1,26 @@
 # 🧭 Travel Planner Agent (LangGraph + FastAPI)
 
-This project implements a **multi-agent travel itinerary planner** using **LangGraph** for agent orchestration and **FastAPI** for API serving.
+A multi-agent travel itinerary planner built with **LangGraph** for agent orchestration and **FastAPI** for API serving. It generates optimized travel plans based on:
 
-It autonomously generates optimized travel itineraries based on:
-- **Weather predictions** (simulated)
-- **Budget tiers** (Low / Mid / High)
-- A **Supervisor agent** that merges all results
-- A **Replanning agent** that regenerates plans if flights are delayed >6 hours
-- **Itinerary history tracking** to show previous versions after replanning
+- 🌤️ Simulated weather predictions
+- 💰 Budget tiers (Low / Mid / High)
+- 🧠 Supervisor agent to merge results
+- 🔁 Replanning agent for flight delays >6 hours
+- 🕓 Itinerary history tracking
 
 ---
 
 ## 🚀 Features
 
-- **Supervisor agent**: Orchestrates sub-agents (weather + budget).
-- **Weather agent**: Predicts random weather and selects suitable indoor/outdoor activities.
-- **Budget agent**: Chooses trip plans based on price tiers (<25K, 25–75K, >75K).
-- **Merge supervisor**: Combines both branches to build a full itinerary.
-- **Replanning agent**: Automatically re-triggers the flow once if flight delay >6 hours.
-- **History tracking**: Preserves previous itineraries before replan.
+- **Supervisor Agent**: Coordinates the planning workflow.
+- **Weather Agent**: Simulates weather and suggests indoor/outdoor activities.
+- **Budget Agent**: Recommends plans based on budget tiers:
+  - Low: < ₹25,000
+  - Mid: ₹25,000–₹75,000
+  - High: > ₹75,000
+- **Merge Supervisor**: Combines weather and budget plans into a final itinerary.
+- **Replanning Agent**: Triggers replanning if flight delay exceeds 6 hours.
+- **History Tracking**: Stores previous itineraries before replanning.
 
 ---
 
@@ -26,39 +28,45 @@ It autonomously generates optimized travel itineraries based on:
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate   # (Windows) .venv\Scripts\activate
+source .venv/bin/activate
 pip install -r requirements.txt
+```
 
+---
 
-⸻
-
-▶️ Running the API
+## ▶️ Running the API
 
 Start the FastAPI server:
 
+```bash
 uvicorn travel_api:app --reload
+```
 
-Then visit:
-	•	Swagger UI: http://127.0.0.1:8000/docs
-	•	Redoc: http://127.0.0.1:8000/redoc
+Access the documentation:
 
-⸻
+- 🔍 Swagger UI: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+- 📘 Redoc: [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
 
-🌐 Endpoint
+---
 
-POST /plan
+## 🌐 API Endpoint
 
-Request Body
+### POST /plan
 
+Request Body:
+
+```json
 {
   "destination": "Goa",
   "travel_date": "2025-12-20",
   "budget": 85000,
   "flight_delay_hours": 7
 }
+```
 
-Example curl
+Example cURL:
 
+```bash
 curl -X POST http://127.0.0.1:8000/plan \
   -H "Content-Type: application/json" \
   -d '{
@@ -67,12 +75,13 @@ curl -X POST http://127.0.0.1:8000/plan \
     "budget": 90000,
     "flight_delay_hours": 7
   }'
+```
 
+---
 
-⸻
+## 📦 Sample Response
 
-📦 Sample Response
-
+```json
 {
   "destination": "Goa",
   "travel_date": "2025-12-20",
@@ -97,85 +106,88 @@ curl -X POST http://127.0.0.1:8000/plan \
   "itinerary_history": [],
   "replan_count": 1
 }
+```
 
+---
 
-⸻
+## 🧠 Graph Workflow
 
-🧠 Graph Workflow
-
-Topology
-
+```text
 START
   ↓
 Supervisor Orchestrator
   ├──▶ Weather Agent
   └──▶ Budget Agent
          ↓        ↓
-           └──▶ Supervisor Merge
+           └──▶ Merge Supervisor
                    ↓
              Replanning Agent
-                 ├── replan=True  → Supervisor Orchestrator
-                 └── replan=False → END
+                 ├── replan = True  → Supervisor Orchestrator
+                 └── replan = False → END
+```
 
-Each node updates only its part of the state (avoids concurrent write conflicts).
-The merge node builds a final itinerary when both branches complete.
+- Each node updates only its part of the state to avoid conflicts.
+- The merge node finalizes the itinerary once both branches complete.
 
-⸻
+---
 
-🧩 Components
+## 🧩 Agent Components
 
-Agent	Role	Input	Output
-Supervisor Orchestrator	Initializes base state, routes graph	destination, date, budget	normalized state
-Weather Agent	Predicts weather + suggests activities	destination, date	weather_summary, weather_activities
-Budget Agent	Suggests stay & plan based on budget	destination, budget	budget_tier, budget_plan
-Merge Supervisor	Combines results, adds cross-logic	all above	final_itinerary, itinerary_history
-Replanning Agent	Checks delay >6h and triggers replan	flight_delay_hours	replan_required
+| Agent                | Role                                      | Input                        | Output                             |
+|---------------------|-------------------------------------------|------------------------------|------------------------------------|
+| Supervisor Orchestrator | Initializes state, routes graph         | destination, date, budget    | normalized state                   |
+| Weather Agent        | Predicts weather, suggests activities     | destination, date            | weather_summary, weather_activities |
+| Budget Agent         | Suggests plan based on budget             | destination, budget          | budget_tier, budget_plan           |
+| Merge Supervisor     | Combines results, adds logic              | all above                    | final_itinerary, itinerary_history |
+| Replanning Agent     | Checks delay, triggers replan if needed   | flight_delay_hours           | replan_required                    |
 
+---
 
-⸻
+## 🛠️ Customization Ideas
 
-🛠️ Customization
-	•	🔗 Integrate real APIs
-	•	Replace the dummy weather_tool() with OpenWeather or Tomorrow.io.
-	•	Load budget itineraries dynamically from a database.
-	•	🤖 Add LLM reasoning
-	•	Bind LangChain tools to Bedrock or OpenAI:
+- 🔗 **Integrate Real APIs**:
+  - Replace `weather_tool()` with OpenWeather or Tomorrow.io.
+  - Load budget plans from a database.
 
-from langchain_aws import ChatBedrock
-llm = ChatBedrock(model_id="anthropic.claude-3-sonnet")
-llm = llm.bind_tools([get_weather, get_budget_plan])
+- 🤖 **Add LLM Reasoning**:
+  ```python
+  from langchain_aws import ChatBedrock
+  llm = ChatBedrock(model_id="anthropic.claude-3-sonnet")
+  llm = llm.bind_tools([get_weather, get_budget_plan])
+  ```
 
+- 🔁 **Multi-Replan Logic**:
+  - Modify `replanning_agent` to allow multiple replans (e.g., `replan_count < N`).
 
-	•	Replace deterministic nodes with LLM-powered ones.
+- 🔐 **Secure the API**:
+  - Add JWT-based authentication via FastAPI dependencies.
+  - Log requests for auditing and analytics.
 
-	•	🔁 Multi-replan logic
-	•	Change the condition in replanning_agent to replan_count < N.
-	•	🔐 Secure the API
-	•	Add JWT-based authentication (FastAPI dependency injection).
-	•	Log each request for auditing or analytics.
+---
 
-⸻
+## 📜 Requirements
 
-📜 Requirements
+From `requirements.txt`:
 
-See requirements.txt:
-
+```
 fastapi==0.115.5
 uvicorn[standard]==0.32.1
 langgraph==0.2.53
 langchain-core==0.3.26
 typing-extensions>=4.12.2
 pydantic==2.9.2
+```
 
+---
 
-⸻
+## 🧾 License
 
-🧾 License
+MIT License — free to use and modify.
 
-MIT License — free to modify and use.
+---
 
-⸻
+## 👤 Author
 
-Author
+**Swapnanil Sharmah**
 
-Swapnanil Sharmah
+---
