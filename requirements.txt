@@ -1,0 +1,6 @@
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+langgraph==0.2.53
+langchain-core==0.3.26
+typing-extensions>=4.12.2
+pydantic==2.9.2
