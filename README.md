@@ -143,28 +143,6 @@ Supervisor Orchestrator
 
 ---
 
-## 🛠️ Customization Ideas
-
-- 🔗 **Integrate Real APIs**:
-  - Replace `weather_tool()` with OpenWeather or Tomorrow.io.
-  - Load budget plans from a database.
-
-- 🤖 **Add LLM Reasoning**:
-  ```python
-  from langchain_aws import ChatBedrock
-  llm = ChatBedrock(model_id="anthropic.claude-3-sonnet")
-  llm = llm.bind_tools([get_weather, get_budget_plan])
-  ```
-
-- 🔁 **Multi-Replan Logic**:
-  - Modify `replanning_agent` to allow multiple replans (e.g., `replan_count < N`).
-
-- 🔐 **Secure the API**:
-  - Add JWT-based authentication via FastAPI dependencies.
-  - Log requests for auditing and analytics.
-
----
-
 ## 📜 Requirements
 
 From `requirements.txt`:
@@ -177,17 +155,5 @@ langchain-core==0.3.26
 typing-extensions>=4.12.2
 pydantic==2.9.2
 ```
-
----
-
-## 🧾 License
-
-MIT License — free to use and modify.
-
----
-
-## 👤 Author
-
-**Swapnanil Sharmah**
 
 ---
